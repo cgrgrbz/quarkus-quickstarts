@@ -16,15 +16,24 @@
 
 package org.acme.optaplanner.domain;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 //@PlanningEntity
-//@Entity
-public class Lesson {
+@Entity
+public class Lesson extends PanacheEntityBase {
 
 //    @PlanningId
-//    @Id @GeneratedValue(strategy = GenerationType.AUTO)
-//    @NotNull
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @NotNull
     private Long id;
 
     @NotBlank
@@ -35,10 +44,10 @@ public class Lesson {
     private String studentGroup;
 
 //    @PlanningVariable(valueRangeProviderRefs = "timeslotRange")
-//    @ManyToOne
+    @ManyToOne
     private Timeslot timeslot;
 //    @PlanningVariable(valueRangeProviderRefs = "roomRange")
-//    @ManyToOne
+    @ManyToOne
     private Room room;
 
     private Lesson() {

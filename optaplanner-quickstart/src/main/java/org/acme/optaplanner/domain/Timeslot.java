@@ -19,13 +19,20 @@ package org.acme.optaplanner.domain;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.validation.constraints.NotNull;
 
-//@Entity
-public class Timeslot {
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+
+@Entity
+public class Timeslot extends PanacheEntityBase {
 
 //    @PlanningId
-//    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @NotNull
     private Long id;
 

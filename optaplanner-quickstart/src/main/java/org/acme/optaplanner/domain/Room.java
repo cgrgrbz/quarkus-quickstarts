@@ -16,14 +16,21 @@
 
 package org.acme.optaplanner.domain;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
-//@Entity
-public class Room {
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
-//    @PlanningId
-//    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+@Entity
+public class Room extends PanacheEntityBase { // extends PanacheEntityBase because we want to annotate the id
+
+    //    @PlanningId
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @NotNull
     private Long id;
 
@@ -49,5 +56,4 @@ public class Room {
     public String toString() {
         return name;
     }
-
 }
