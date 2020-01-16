@@ -1,9 +1,9 @@
-import java.sql.Time;
+package org.acme.optaplanner;
+
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
@@ -14,7 +14,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import org.acme.optaplanner.domain.Lesson;
 import org.acme.optaplanner.domain.Room;
 import org.acme.optaplanner.domain.TimeTable;
@@ -41,6 +40,7 @@ public class TimeTableResource {
     @POST
     @Path("/addLesson")
     public void addLesson(Lesson lesson) {
+        //TODO check status code when adding a lesson
         Lesson.persist(lesson);
     }
 
