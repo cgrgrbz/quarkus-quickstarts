@@ -187,7 +187,7 @@ function deleteRoom(room) {
 }
 
 function showError(title, xhr) {
-    var serverErrorMessage = xhr.responseJSON == null ? "No response from server." : xhr.responseJSON.message;
+    var serverErrorMessage = !xhr.responseJSON ? `${xhr.status}: ${xhr.statusText}` : xhr.responseJSON.message;
     console.error(title + "\n" + serverErrorMessage);
     var notification = $("<div class=\"toast\" role=\"alert\" aria-live=\"assertive\" aria-atomic=\"true\" style=\"min-width: 30rem\">"
             + "<div class=\"toast-header bg-danger\">"

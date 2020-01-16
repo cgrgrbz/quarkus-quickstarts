@@ -5,62 +5,20 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
 import javax.transaction.Transactional;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 
+import io.quarkus.runtime.StartupEvent;
 import org.acme.optaplanner.domain.Lesson;
 import org.acme.optaplanner.domain.Room;
-import org.acme.optaplanner.domain.TimeTable;
 import org.acme.optaplanner.domain.Timeslot;
 
-@Path("/timeTable")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-@Transactional
-public class TimeTableResource {
+@ApplicationScoped
+public class TimeTableDataInitializer {
 
-    // To try, open http://localhost:8080/timeTable
-    @GET
-    public TimeTable refreshTimeTable() {
-        return new TimeTable(Timeslot.listAll(), Room.listAll(), Lesson.listAll());
-    }
-
-    @POST
-    @Path("/solve")
-    public String solve() {
-        return "Method not supported yet";
-    }
-
-    @POST
-    @Path("/addLesson")
-    public void addLesson(Lesson lesson) {
-        //TODO check status code when adding a lesson
-        Lesson.persist(lesson);
-    }
-
-    @POST
-    @Path("/addTimeslot")
-    public void addTimeslot(Timeslot timeslot) {
-        Timeslot.persist(timeslot);
-    }
-
-    // To try:  curl -d '{"name":"Room Z"}' -H "Content-Type: application/json" -X POST http://localhost:8080/timeTable/addRoom
-    @POST
-    @Path("/addRoom")
-    public void addRoom(Room room) {
-        System.out.println(room);
-        Room.persist(room);
-    }
-
-    @PostConstruct
     @Transactional
-    public void generateProblem() {
+    public void generateProblem(@Observes StartupEvent ev) {
         List<Timeslot> timeslotList = new ArrayList<>(10);
         timeslotList.add(new Timeslot(DayOfWeek.MONDAY, LocalTime.of(8, 30), LocalTime.of(9, 30)));
         timeslotList.add(new Timeslot(DayOfWeek.MONDAY, LocalTime.of(9, 30), LocalTime.of(10, 30)));
