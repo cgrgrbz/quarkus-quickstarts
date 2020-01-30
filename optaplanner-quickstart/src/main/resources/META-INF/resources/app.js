@@ -1,121 +1,158 @@
 var autoRefreshCount = 0;
 var autoRefreshIntervalId = null;
 
+function compareTimeslots(ts1, ts2) {
+    const ts1StartMoment = moment(`${ts1.dayOfWeek} ${ts1.startTime}`, "ddd dddd HH:mm:ss");
+    const ts1EndMoment = moment(`${ts1.dayOfWeek} ${ts1.endTime}`, "ddd dddd HH:mm:ss");
+    const ts2StartMoment = moment(`${ts2.dayOfWeek} ${ts2.startTime}`, "ddd dddd HH:mm:ss");
+    const ts2EndMoment = moment(`${ts2.dayOfWeek} ${ts2.endTime}`, "ddd dddd HH:mm:ss");
+
+    if (ts1StartMoment.isBefore(ts2StartMoment)) {
+        return -1;
+    } else if (ts2StartMoment.isBefore(ts1StartMoment)) {
+        return 1;
+    }
+
+    if (ts1EndMoment.isBefore(ts2EndMoment)) {
+        return -1;
+    } else if (ts2EndMoment.isBefore(ts1EndMoment)) {
+        return 1;
+    }
+
+    // If same timeslots, compare based on ids:
+    return ts1.id - ts2.id;
+}
+
 function refreshTimeTable() {
     $.getJSON("/timeTable", function (timeTable) {
         refreshSolvingButtons(timeTable.solverStatus != null && timeTable.solverStatus !== "NOT_SOLVING");
         $("#score").text("Score: "+ (timeTable.score == null ? "?" : timeTable.score));
 
-        var timeTableByRoom = $("#timeTableByRoom");
+        const timeTableByRoom = $("#timeTableByRoom");
         timeTableByRoom.children().remove();
-        var timeTableByTeacher = $("#timeTableByTeacher");
+        const timeTableByTeacher = $("#timeTableByTeacher");
         timeTableByTeacher.children().remove();
-        var timeTableByStudentGroup = $("#timeTableByStudentGroup");
+        const timeTableByStudentGroup = $("#timeTableByStudentGroup");
         timeTableByStudentGroup.children().remove();
-        var unassignedLessons = $("#unassignedLessons");
+        const unassignedLessons = $("#unassignedLessons");
         unassignedLessons.children().remove();
 
-        var theadByRoom = $("<thead>").appendTo(timeTableByRoom);
-        var headerRowByRoom = $("<tr>").appendTo(theadByRoom);
+        const theadByRoom = $("<thead>").appendTo(timeTableByRoom);
+        const headerRowByRoom = $("<tr>").appendTo(theadByRoom);
         headerRowByRoom.append($("<th>Timeslot</th>"));
-        $.each(timeTable.roomList, function (index, room) {
-            headerRowByRoom.append($("<th>"
-                    + "<span>" + room.name + "</span>"
-                    + "<button id=\"deleteRoomButton-" + room.id + "\" type=\"button\" class=\"ml-2 mb-1 btn btn-light btn-sm p-1\">"
-                    + "<small class=\"fas fa-trash\"></small>"
-                    + "</button>"
-                    + "</th>"));
-            $("#deleteRoomButton-" + room.id).click(function() {
-                deleteRoom(room);
-            });
+        $.each(timeTable.roomList, (index, room) => {
+            headerRowByRoom
+                    .append($("<th>")
+                            .append($("<span/>").text(room.name))
+                            .append($(`
+                  <button type="button" class="ml-2 mb-1 btn btn-light btn-sm p-1">
+                    <small class="fas fa-trash"></small>
+                  </button>`
+                            ).click(() => deleteRoom(room)))
+                            .append("</th>"));
         });
-        var theadByTeacher = $("<thead>").appendTo(timeTableByTeacher);
-        var headerRowByTeacher = $("<tr>").appendTo(theadByTeacher);
+        const theadByTeacher = $("<thead>").appendTo(timeTableByTeacher);
+        const headerRowByTeacher = $("<tr>").appendTo(theadByTeacher);
         headerRowByTeacher.append($("<th>Timeslot</th>"));
         const teacherList = [...new Set(timeTable.lessonList.map(lesson => lesson.teacher))];
-        $.each(teacherList, function (index, teacher) {
-            headerRowByTeacher.append($("<th>"
-                    + "<span>" + teacher + "</span>"
-                    + "</th>"));
+        $.each(teacherList, (index, teacher) => {
+            headerRowByTeacher
+                    .append($("<th>")
+                            .append($("<span />").text(teacher))
+                            .append("</th>"));
         });
-        var theadByStudentGroup = $("<thead>").appendTo(timeTableByStudentGroup);
-        var headerRowByStudentGroup = $("<tr>").appendTo(theadByStudentGroup);
+        const theadByStudentGroup = $("<thead>").appendTo(timeTableByStudentGroup);
+        const headerRowByStudentGroup = $("<tr>").appendTo(theadByStudentGroup);
         headerRowByStudentGroup.append($("<th>Timeslot</th>"));
         const studentGroupList = [...new Set(timeTable.lessonList.map(lesson => lesson.studentGroup))];
-        $.each(studentGroupList, function (index, studentGroup) {
-            headerRowByStudentGroup.append($("<th>"
-                    + "<span>" + studentGroup + "</span>"
-                    + "</th>"));
+        $.each(studentGroupList, (index, studentGroup) => {
+            headerRowByStudentGroup
+                    .append($("<th>")
+                            .append($("<span />").text(studentGroup))
+                            .append("</th>"));
         });
 
-        var tbodyByRoom = $("<tbody>").appendTo(timeTableByRoom);
-        var tbodyByTeacher = $("<tbody>").appendTo(timeTableByTeacher);
-        var tbodyByStudentGroup = $("<tbody>").appendTo(timeTableByStudentGroup);
-        $.each(timeTable.timeslotList, function (index, timeslot) {
-            var rowByRoom = $("<tr>").appendTo(tbodyByRoom);
-            rowByRoom.append($("<th class=\"align-middle\">"
-                    + "<span>" + timeslot.dayOfWeek.charAt(0) + timeslot.dayOfWeek.slice(1).toLowerCase()
-                    + " " + moment(timeslot.startTime, "HH:mm:ss").format("HH:mm")
-                    + " - " + moment(timeslot.endTime, "HH:mm:ss").format("HH:mm") + "</span>"
-                    + "<button id=\"deleteTimeslotButton-" + timeslot.id + "\" type=\"button\" class=\"ml-2 mb-1 btn btn-light btn-sm p-1\">"
-                    + "<small class=\"fas fa-trash\"></small>"
-                    + "</button>"
-                    + "</th>"));
-            $("#deleteTimeslotButton-" + timeslot.id).click(function() {
-                deleteTimeslot(timeslot);
+        const tbodyByRoom = $("<tbody>").appendTo(timeTableByRoom);
+        const tbodyByTeacher = $("<tbody>").appendTo(timeTableByTeacher);
+        const tbodyByStudentGroup = $("<tbody>").appendTo(timeTableByStudentGroup);
+        timeTable.timeslotList.sort((ts1, ts2) => compareTimeslots(ts1, ts2));
+        $.each(timeTable.timeslotList, (index, timeslot) => {
+            const rowByRoom = $("<tr>").appendTo(tbodyByRoom);
+            rowByRoom
+                    .append($(`<th class="align-middle">`)
+                            .append($("<span/>").text(`
+                    ${timeslot.dayOfWeek.charAt(0) + timeslot.dayOfWeek.slice(1).toLowerCase()}
+                    ${moment(timeslot.startTime, "HH:mm:ss").format("HH:mm")}
+                    -
+                    ${moment(timeslot.endTime, "HH:mm:ss").format("HH:mm")}
+                `)
+                                    .append($(`
+                    <button type="button" class="ml-2 mb-1 btn btn-light btn-sm p-1">
+                        <small class="fas fa-trash"></small>
+                    </button>
+                `).click(() => deleteTimeslot(timeslot)))
+                                    .append("</th>")));
+
+            const rowByTeacher = $("<tr>").appendTo(tbodyByTeacher);
+            rowByTeacher
+                    .append($(`<th class="align-middle">`)
+                            .append($("<span/>").text(`
+                    ${timeslot.dayOfWeek.charAt(0) + timeslot.dayOfWeek.slice(1).toLowerCase()}
+                    ${moment(timeslot.startTime, "HH:mm:ss").format("HH:mm")}
+                    -
+                    ${moment(timeslot.endTime, "HH:mm:ss").format("HH:mm")}
+                `)
+                                    .append("</th>")));
+            $.each(timeTable.roomList, (index, room) => {
+                rowByRoom.append($("<td/>").prop("id", `timeslot${timeslot.id}room${room.id}`));
             });
-            $.each(timeTable.roomList, function (index, room) {
-                rowByRoom.append($("<td id=\"timeslot" + timeslot.id + "room" + room.id + "\"></td>"));
+            const rowByStudentGroup = $("<tr>").appendTo(tbodyByStudentGroup);
+            rowByStudentGroup
+                    .append($(`<th class="align-middle">`)
+                            .append($("<span/>").text(`
+                    ${timeslot.dayOfWeek.charAt(0) + timeslot.dayOfWeek.slice(1).toLowerCase()}
+                    ${moment(timeslot.startTime, "HH:mm:ss").format("HH:mm")}
+                    -
+                    ${moment(timeslot.endTime, "HH:mm:ss").format("HH:mm")}
+                `))
+                            .append("</th>"));
+
+            $.each(teacherList, (index, teacher) => {
+                rowByTeacher.append($("<td/>").prop("id", `timeslot${timeslot.id}teacher${convertToId(teacher)}`));
             });
-            var rowByTeacher = $("<tr>").appendTo(tbodyByTeacher);
-            rowByTeacher.append($("<th class=\"align-middle\">"
-                    + "<span>" + timeslot.dayOfWeek.charAt(0) + timeslot.dayOfWeek.slice(1).toLowerCase()
-                    + " " + moment(timeslot.startTime, "HH:mm:ss").format("HH:mm")
-                    + " - " + moment(timeslot.endTime, "HH:mm:ss").format("HH:mm") + "</span>"
-                    + "</th>"));
-            $.each(teacherList, function (index, teacher) {
-                rowByTeacher.append($("<td id=\"timeslot" + timeslot.id + "teacher" + convertToId(teacher) + "\"></td>"));
-            });
-            var rowByStudentGroup = $("<tr>").appendTo(tbodyByStudentGroup);
-            rowByStudentGroup.append($("<th class=\"align-middle\">"
-                    + "<span>" + timeslot.dayOfWeek.charAt(0) + timeslot.dayOfWeek.slice(1).toLowerCase()
-                    + " " + moment(timeslot.startTime, "HH:mm:ss").format("HH:mm")
-                    + " - " + moment(timeslot.endTime, "HH:mm:ss").format("HH:mm") + "</span>"
-                    + "</th>"));
-            $.each(studentGroupList, function (index, studentGroup) {
-                rowByStudentGroup.append($("<td id=\"timeslot" + timeslot.id + "studentGroup" + convertToId(studentGroup) + "\"></td>"));
+
+            $.each(studentGroupList, (index, studentGroup) => {
+                rowByStudentGroup.append($("<td/>").prop("id", `timeslot${timeslot.id}studentGroup${convertToId(studentGroup)}`));
             });
         });
 
-        $.each(timeTable.lessonList, function (index, lesson) {
-            let color = pickColor(lesson.subject);
-            var lessonElement = $("<div class=\"card lesson\" style=\"background-color: " + color +"\"><div class=\"card-body p-2\">"
-                    + "<button id=\"deleteLessonButton-" + lesson.id + "\" type=\"button\" class=\"ml-2 btn btn-light btn-sm p-1 float-right\">"
-                    + "<small class=\"fas fa-trash\"></small>"
-                    + "</button>"
-                    + "<h5 class=\"card-title mb-1\">" + lesson.subject + "</h5>"
-                    + "<p class=\"card-text text-muted ml-2 mb-1\">by " + lesson.teacher + "</p>"
-                    + "<small class=\"ml-2 mt-1 card-text text-muted align-bottom float-right\">" + lesson.id + "</small>"
-                    + "<p class=\"card-text ml-2\">" + lesson.studentGroup + "</p>"
-                    + "</div></div>");
+        $.each(timeTable.lessonList, (index, lesson) => {
+            const color = pickColor(lesson.subject);
+            const lessonElementWithoutDelete = $(
+                    `<div class="card lesson" style="background-color: ${color}">`)
+                    .append($(`<div class="card-body p-2">`)
+                            .append($(`<h5 class="card-title mb-1" />`).text(lesson.subject))
+                            .append($(`<p class="card-text text-muted ml-2 mb-1" />`).text(`by ${lesson.teacher}`))
+                            .append($(`<small class="ml-2 mt-1 card-text text-muted align-bottom float-right" />`).text(lesson.id))
+                            .append($(`<p class="card-text ml-2" />`).text(lesson.studentGroup))
+                            .append("</div>"))
+                    .append(`</div>`);
+            const lessonElement = lessonElementWithoutDelete.clone();
+            lessonElement.find(".card-body").prepend(
+                    $(`
+                    <button type="button" class="ml-2 btn btn-light btn-sm p-1 float-right">
+                        <small class="fas fa-trash"></small>
+                    </button>
+                `).click(() => deleteLesson(lesson))
+            );
             if (lesson.timeslot == null || lesson.room == null) {
                 unassignedLessons.append(lessonElement);
             } else {
-                $("#timeslot" + lesson.timeslot.id + "room" + lesson.room.id).append(lessonElement);
-                var lessonElementWithoutDelete = $("<div class=\"card lesson\" style=\"background-color: " + color +"\"><div class=\"card-body p-2\">"
-                        + "<h5 class=\"card-title mb-1\">" + lesson.subject + "</h5>"
-                        + "<p class=\"card-text text-muted ml-2 mb-1\">by " + lesson.teacher + "</p>"
-                        + "<small class=\"ml-2 mt-1 card-text text-muted align-bottom float-right\">" + lesson.id + "</small>"
-                        + "<p class=\"card-text ml-2\">" + lesson.studentGroup + "</p>"
-                        + "</div></div>");
-                $("#timeslot" + lesson.timeslot.id + "teacher" + convertToId(lesson.teacher)).append(lessonElementWithoutDelete.clone());
-                $("#timeslot" + lesson.timeslot.id + "studentGroup" + convertToId(lesson.studentGroup)).append(lessonElementWithoutDelete.clone());
+                $(`#timeslot${lesson.timeslot.id}room${lesson.room.id}`).append(lessonElement);
+                $(`#timeslot${lesson.timeslot.id}teacher${convertToId(lesson.teacher)}`).append(lessonElementWithoutDelete.clone());
+                $(`#timeslot${lesson.timeslot.id}studentGroup${convertToId(lesson.studentGroup)}`).append(lessonElementWithoutDelete.clone());
             }
-            $("#deleteLessonButton-" + lesson.id).click(function() {
-                deleteLesson(lesson);
-            });
         });
-
     });
 }
 
@@ -228,17 +265,24 @@ function deleteRoom(room) {
 }
 
 function showError(title, xhr) {
-    var serverErrorMessage = !xhr.responseJSON ? `${xhr.status}: ${xhr.statusText}` : xhr.responseJSON.message;
+    const serverErrorMessage = !xhr.responseJSON ? `${xhr.status}: ${xhr.statusText}` : xhr.responseJSON.message;
     console.error(title + "\n" + serverErrorMessage);
-    var notification = $("<div class=\"toast\" role=\"alert\" aria-live=\"assertive\" aria-atomic=\"true\" style=\"min-width: 30rem\">"
-            + "<div class=\"toast-header bg-danger\">"
-            + "<strong class=\"mr-auto text-dark\">Error</strong>"
-            + "<button type=\"button\" class=\"ml-2 mb-1 close\" data-dismiss=\"toast\" aria-label=\"Close\">"
-            + "<span aria-hidden=\"true\">&times;</span>"
-            + "</button>"
-            + "</div>"
-            + "<div class=\"toast-body\"><p>" + title + "</p><pre><code>" + serverErrorMessage + "</code></pre></div>"
-            + "</div>");
+    const notification = $(`
+    <div class="toast" role="alert" role="alert" aria-live="assertive" aria-atomic="true" style="min-width: 30rem">
+        <div class="toast-header bg-danger">
+            <strong class="mr-auto text-dark">Error</strong>
+            <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="toast-body">
+      `)
+            .append($(`<p/>`).text(title))
+            .append($(`<pre>`)
+                    .append($(`<code />`).text(serverErrorMessage))
+                    .append(`</pre>
+        </div>
+    </div>`));
     $("#notificationPanel").append(notification);
     notification.toast({delay: 30000});
     notification.toast('show');
