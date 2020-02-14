@@ -13,8 +13,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.quarkus.panache.common.Sort;
 import org.acme.optaplanner.domain.Lesson;
-import org.acme.optaplanner.domain.Room;
 
 @Path("/lessons")
 @Produces(MediaType.APPLICATION_JSON)
@@ -24,7 +24,7 @@ public class LessonResource {
 
     @GET
     public List<Lesson> getAllLessons() {
-        return Lesson.listAll();
+        return Lesson.listAll(Sort.by("subject").and("teacher").and("studentGroup").and("id"));
     }
 
     @POST

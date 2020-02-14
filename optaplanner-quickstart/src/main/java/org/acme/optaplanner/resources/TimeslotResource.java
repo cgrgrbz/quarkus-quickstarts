@@ -13,6 +13,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.quarkus.panache.common.Sort;
 import org.acme.optaplanner.domain.Timeslot;
 
 @Path("/timeslots")
@@ -23,7 +24,7 @@ public class TimeslotResource {
 
     @GET
     public List<Timeslot> getAllTimeslots() {
-        return Timeslot.listAll();
+        return Timeslot.listAll(Sort.by("dayOfWeek").and("startTime").and("endTime").and("id"));
     }
 
     @POST

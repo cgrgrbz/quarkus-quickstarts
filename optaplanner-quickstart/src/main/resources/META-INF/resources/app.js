@@ -1,28 +1,6 @@
 var autoRefreshCount = 0;
 var autoRefreshIntervalId = null;
 
-function compareTimeslots(ts1, ts2) {
-    const ts1StartMoment = moment(`${ts1.dayOfWeek} ${ts1.startTime}`, "ddd dddd HH:mm:ss");
-    const ts1EndMoment = moment(`${ts1.dayOfWeek} ${ts1.endTime}`, "ddd dddd HH:mm:ss");
-    const ts2StartMoment = moment(`${ts2.dayOfWeek} ${ts2.startTime}`, "ddd dddd HH:mm:ss");
-    const ts2EndMoment = moment(`${ts2.dayOfWeek} ${ts2.endTime}`, "ddd dddd HH:mm:ss");
-
-    if (ts1StartMoment.isBefore(ts2StartMoment)) {
-        return -1;
-    } else if (ts2StartMoment.isBefore(ts1StartMoment)) {
-        return 1;
-    }
-
-    if (ts1EndMoment.isBefore(ts2EndMoment)) {
-        return -1;
-    } else if (ts2EndMoment.isBefore(ts1EndMoment)) {
-        return 1;
-    }
-
-    // If same timeslots, compare based on ids:
-    return ts1.id - ts2.id;
-}
-
 function refreshTimeTable() {
     $.getJSON("/timeTable", function (timeTable) {
         refreshSolvingButtons(timeTable.solverStatus != null && timeTable.solverStatus !== "NOT_SOLVING");
@@ -75,7 +53,6 @@ function refreshTimeTable() {
         const tbodyByRoom = $("<tbody>").appendTo(timeTableByRoom);
         const tbodyByTeacher = $("<tbody>").appendTo(timeTableByTeacher);
         const tbodyByStudentGroup = $("<tbody>").appendTo(timeTableByStudentGroup);
-        timeTable.timeslotList.sort((ts1, ts2) => compareTimeslots(ts1, ts2));
         $.each(timeTable.timeslotList, (index, timeslot) => {
             const rowByRoom = $("<tr>").appendTo(tbodyByRoom);
             rowByRoom

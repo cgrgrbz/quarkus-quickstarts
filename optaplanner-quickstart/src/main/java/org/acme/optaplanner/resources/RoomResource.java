@@ -13,6 +13,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.quarkus.panache.common.Sort;
 import org.acme.optaplanner.domain.Room;
 
 @Path("/rooms")
@@ -23,7 +24,7 @@ public class RoomResource {
 
     @GET
     public List<Room> getAllRooms() {
-        return Room.listAll();
+        return Room.listAll(Sort.by("name").and("id"));
     }
 
     // To try:  curl -d '{"name":"Room Z"}' -H "Content-Type: application/json" -X POST http://localhost:8080/rooms

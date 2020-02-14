@@ -9,6 +9,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.quarkus.panache.common.Sort;
 import org.acme.optaplanner.domain.Lesson;
 import org.acme.optaplanner.domain.Room;
 import org.acme.optaplanner.domain.TimeTable;
@@ -23,7 +24,10 @@ public class TimeTableResource {
     // To try, open http://localhost:8080/timeTable
     @GET
     public TimeTable refreshTimeTable() {
-        return new TimeTable(Timeslot.listAll(), Room.listAll(), Lesson.listAll());
+        return new TimeTable(
+                Timeslot.listAll(Sort.by("dayOfWeek").and("startTime").and("endTime").and("id")),
+                Room.listAll(Sort.by("name").and("id")),
+                Lesson.listAll(Sort.by("subject").and("teacher").and("studentGroup").and("id")));
     }
 
     @POST
