@@ -1,4 +1,4 @@
-package org.acme.optaplanner.resources;
+package org.acme.optaplanner.rest;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
@@ -27,4 +27,5 @@ public class RoomResourceTest {
                 .then()
                 .statusCode(200);
     }
+
 }

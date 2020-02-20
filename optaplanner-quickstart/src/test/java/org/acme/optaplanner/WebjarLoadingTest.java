@@ -10,11 +10,11 @@ import static io.restassured.RestAssured.given;
 public class WebjarLoadingTest {
 
     @Test
-    @DisabledOnNativeImage
-    public void testGettingBootstrapCss() {
+    public void getBootstrapCss() {
         given()
                 .when().get("webjars/bootstrap/4.3.1/css/bootstrap.min.css")
                 .then()
                 .statusCode(200);
     }
+
 }

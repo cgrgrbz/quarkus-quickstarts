@@ -16,13 +16,13 @@ import org.acme.optaplanner.domain.Timeslot;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
-public class AppLifecycleBean {
+public class DemoDataGenerator {
 
     @ConfigProperty(name = "timeTable.demoData", defaultValue = "SMALL")
     DemoData demoData;
 
     @Transactional
-    public void generateProblemOnStartup(@Observes StartupEvent ev) {
+    public void generateDemoData(@Observes StartupEvent startupEvent) {
         if (demoData == DemoData.NONE) {
             return;
         }
@@ -178,12 +178,9 @@ public class AppLifecycleBean {
             lessonList.add(new Lesson("Physical education", "C. Lewis", "12th grade"));
         }
 
-        lessonList.get(4).setTimeslot(timeslotList.get(2));
-        lessonList.get(4).setRoom(roomList.get(0));
-        lessonList.get(5).setTimeslot(timeslotList.get(3));
-        lessonList.get(5).setRoom(roomList.get(1));
-        lessonList.get(6).setTimeslot(timeslotList.get(3));
-        lessonList.get(6).setRoom(roomList.get(1));
+        Lesson lesson = lessonList.get(0);
+        lesson.setTimeslot(timeslotList.get(0));
+        lesson.setRoom(roomList.get(0));
         Lesson.persist(lessonList);
     }
 
@@ -192,4 +189,5 @@ public class AppLifecycleBean {
         SMALL,
         LARGE
     }
+
 }

@@ -1,4 +1,4 @@
-package org.acme.optaplanner.resources;
+package org.acme.optaplanner.rest;
 
 import java.util.List;
 
