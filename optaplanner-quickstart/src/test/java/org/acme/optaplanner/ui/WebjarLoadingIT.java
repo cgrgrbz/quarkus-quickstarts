@@ -1,4 +1,4 @@
-package org.acme.optaplanner;
+package org.acme.optaplanner.ui;
 
 import io.quarkus.test.junit.NativeImageTest;
 
